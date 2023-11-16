@@ -2,6 +2,8 @@
 USE ROLE ANALYST_ROLE;
 USE WAREHOUSE A4_WH;
 
+USE DATABASE A4_DB;
+
 
 -- ----------------------------------------------------------------------------
 -- Step #1: Connect to weather data in Marketplace
@@ -50,9 +52,9 @@ SELECT
     YEAR(ts.date)::STRING AS year,
     SUM(ts.value) AS annual_robbery
 FROM
-    cybersyn.urban_crime_timeseries AS ts
+    BIGDATA.urban_crime_timeseries AS ts
 JOIN
-    cybersyn.urban_crime_incident_log AS ic ON ts.geo_id = ic.geo_id
+    BIGDATA.urban_crime_incident_log AS ic ON ts.geo_id = ic.geo_id
 WHERE
     YEAR(ts.date) = '2022'
     AND ts.variable_name = 'Daily count of incidents, robbery'

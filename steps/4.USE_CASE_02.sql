@@ -9,6 +9,11 @@
 
 -- Top five ZIP CODES in US with  specific crime incidents 
 
+USE ROLE ANALYST_ROLE;
+USE WAREHOUSE A4_WH;
+
+USE DATABASE A4_DB;
+
 SELECT
     geo.geo_name,
     ts.city,
@@ -16,9 +21,9 @@ SELECT
     ts.variable_name,
     ts.value
 FROM
-    cybersyn.urban_crime_timeseries AS ts
+    bigdata.urban_crime_timeseries AS ts
 JOIN
-    cybersyn.geography_index AS geo ON (ts.geo_id = geo.geo_id)
+    bigdata.geography_index AS geo ON (ts.geo_id = geo.geo_id)
 WHERE
     ts.variable_name = 'Daily count of incidents, theft'
 ORDER BY
