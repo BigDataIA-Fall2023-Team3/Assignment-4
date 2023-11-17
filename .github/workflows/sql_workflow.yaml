@@ -38,7 +38,7 @@ jobs:
       - name: Execute SQL Scripts
         run: |
           # Add a command to change to the directory where your SQL scripts are located
-          cd steps
+          cd path/to/sql/scripts  # Replace with the actual path to your SQL scripts
 
           # List all SQL script files in the directory
           sql_files=$(find . -type f -name "*.sql")
@@ -51,10 +51,9 @@ jobs:
             snowsql_cmd="snowsql -c ${snowsql_connection} -f ${sql_file}"
             
             # Execute the SQL script using subprocess
-            try
-              $snowsql_cmd
-            except Exception as e:
-              echo "Error executing $sql_file: $e"
-              # You can choose to handle errors or continue with the next script
+            $snowsql_cmd
+            if [ $? -ne 0 ]; then
+              echo "Error executing $sql_file"
+              exit 1
+            fi
           done
-
