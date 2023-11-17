@@ -1,4 +1,6 @@
-
+USE ROLE ANALYST_ROLE;
+USE DATABASE A4_DB;
+USE SCHEMA BIGDATA;
 
 --Urban Crime Analysis with Geographical Relationships
 CREATE OR REPLACE VIEW crime_data_with_relationship_type_view AS
@@ -18,5 +20,3 @@ JOIN A4_DB.BIGDATA.geography_index AS geo ON ts.geo_id = geo.geo_id
 INNER JOIN A4_DB.BIGDATA.geography_relationships AS rel ON geo.geo_id = rel.geo_id
 WHERE geo.geo_name = '11221' --zip code of interest
 ORDER BY ts.date;
-
-SELECT*from crime_data_with_relationship_type_view;
