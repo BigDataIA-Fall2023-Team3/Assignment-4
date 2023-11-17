@@ -22,7 +22,18 @@ jobs:
       run: SNOWSQL_DEST=~/snowflake SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
     - name: Test installation
       run: ~/snowflake/snowsql -v
-    - name: Execute SQL against Snowflake
-      run: ~/snowflake/snowsql -f 3.USE_CASE_01.sql;
+    - name: Create Database
+      run: ~/snowflake/snowsql -f 1.database.sql
+    - name: Import data
+      run: ~/snowflake/snowsql -f 2.importing_data.sql
+    - name: Execute UDFs
+      run: ~/snowflake/snowsql -f 3.User_Defined_Functions.sql;
+    - name: Execute Use Case 1
+      run: ~/snowflake/snowsql -f 4.USE_CASE_01.sql
+    - name: Execute Use Case 2
+      run: ~/snowflake/snowsql -f 5.USE_CASE_02.sql
+    - name: Execute Use Case 3
+      run: ~/snowflake/snowsql -f 6.USE_CASE_03.sql
+    
 
     
