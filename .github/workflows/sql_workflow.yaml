@@ -24,4 +24,7 @@ jobs:
     - name: Execute SQL against Snowflake
       # run:  ~/snowflake/snowsql -f 3.USE_CASE_01.sql;
       run: cd steps
-           ls
+    - name: Execute SQL against Snowflake
+      # run:  ~/snowflake/snowsql -f 3.USE_CASE_01.sql;
+      run: ls
+    
