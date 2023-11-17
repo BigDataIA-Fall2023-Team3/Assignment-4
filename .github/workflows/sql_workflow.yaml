@@ -9,22 +9,20 @@ on: push
 jobs:                         
   executequery:                           
     name: Install SnowSQL                          
-    runs-on: ubuntu-latest                           
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: steps  # Set the working directory for all steps in this job to "steps"
     steps:
     - name: Checkout
       uses: actions/checkout@master
-    - name: Change to SQL scripts directory
-      run: cd steps
     - name: Download SnowSQL
-      run:  curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
+      run: curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
     - name: Install SnowSQL
       run: SNOWSQL_DEST=~/snowflake SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
     - name: Test installation
-      run:  ~/snowflake/snowsql -v
+      run: ~/snowflake/snowsql -v
     - name: Execute SQL against Snowflake
-      # run:  ~/snowflake/snowsql -f 3.USE_CASE_01.sql;
-      run: cd steps
-    - name: Execute SQL against Snowflake
-      # run:  ~/snowflake/snowsql -f 3.USE_CASE_01.sql;
       run: ls
+
     
