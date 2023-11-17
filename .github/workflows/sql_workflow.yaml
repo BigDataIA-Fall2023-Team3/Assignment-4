@@ -1,40 +1,48 @@
-name: Execute SQL Scripts in Snowflake
+name: Deploy Snowpark Apps
 
+# Controls when the action will run. 
 on:
   push:
     branches:
       - main
 
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
 jobs:
-  execute_sql_scripts:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Install SnowSQL
-        run: |
-          curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.3-linux_x86_64.tar.gz
-          tar -xzvf snowsql-1.2.3-linux_x86_64.tar.gz
-          chmod +x snowsql
-          mv snowsql /usr/local/bin
-          snowsql --version
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
-      - name: Configure SnowSQL
+      - name: Install Python packages
+        run: pip install -r requirements.txt
+
+      - name: Configure snowcli
         env:
           SNOWSQL_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
           SNOWSQL_USER: ${{ secrets.SNOWSQL_USER }}
-          SNOWSQL_PASSWORD: ${{ secrets.SNOWSQL_PASSWORD }}
+          SNOWSQL_PWD: ${{ secrets.SNOWSQL_PASSWORD }}
+          SNOWSQL_ROLE: ${{ secrets.SNOWSQL_ROLE }}
+          SNOWSQL_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
           SNOWSQL_DATABASE: ${{ secrets.SNOWSQL_DATABASE }}
-          SNOWSQL_SCHEMA: ${{ secrets.SNOWSQL_SCHEMA }}
         run: |
-          echo "[connections.dev]" > ~/.snowsql/config
-          echo "accountname = $SNOWSQL_ACCOUNT" >> ~/.snowsql/config
-          echo "username = $SNOWSQL_USER" >> ~/.snowsql/config
-          echo "password = $SNOWSQL_PASSWORD" >> ~/.snowsql/config
-          echo "dbname = $SNOWSQL_DATABASE" >> ~/.snowsql/config
-          echo "schemaname = $SNOWSQL_SCHEMA" >> ~/.snowsql/config
+          cd $GITHUB_WORKSPACE
+          echo "[connections.dev]" > config
+          echo "accountname = $SNOWSQL_ACCOUNT" >> config
+          echo "username = $SNOWSQL_USER" >> config
+          echo "password = $SNOWSQL_PASSWORD" >> config
+          echo "rolename = $SNOWSQL_ROLE" >> config
+          echo "warehousename = $SNOWSQL_WAREHOUSE" >> config
+          echo "dbname = $SNOWSQL_DATABASE" >> config
 
       - name: Execute SQL Scripts
         run: |
@@ -42,3 +50,4 @@ jobs:
           for file in ./steps/*.sql; do
             snowsql -c dev -f "$file"
           done
+        
