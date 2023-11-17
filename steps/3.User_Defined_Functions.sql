@@ -18,6 +18,8 @@ $$
 $$;
 
 
+
+
 CREATE OR REPLACE FUNCTION extract_weekday(date_input DATE)
 RETURNS STRING
 AS
@@ -33,7 +35,16 @@ $$
     END
 $$;
 
-
+-----UDF for usecase 4
+CREATE OR REPLACE FUNCTION classify_relationship_type(relationship_type STRING)
+RETURNS STRING 
+AS
+$$
+    CASE 
+        WHEN relationship_type = 'Overlaps' THEN 'OVERLAPS'
+        ELSE 'CONTAINS'
+    END
+$$;
 
 
 
