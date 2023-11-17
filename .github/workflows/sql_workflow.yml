@@ -24,12 +24,12 @@ jobs:
 
       - name: Run SQL Scripts
         run: |
-          # Replace with your Snowflake connection details
-          SNOWFLAKE_ACCOUNT=<your_account>
-          SNOWFLAKE_USER=<your_user>
-          SNOWFLAKE_PASSWORD=<your_password>
-          SNOWFLAKE_DATABASE=<your_database>
-          SNOWFLAKE_SCHEMA=<your_schema>
+          # Use GitHub secrets for Snowflake credentials
+          SNOWFLAKE_ACCOUNT="${{ secrets.SNOWFLAKE_ACCOUNT }}"
+          SNOWFLAKE_USER="${{ secrets.SNOWFLAKE_USER }}"
+          SNOWFLAKE_PASSWORD="${{ secrets.SNOWFLAKE_PASSWORD }}"
+          SNOWFLAKE_DATABASE="${{ secrets.SNOWFLAKE_DATABASE }}"
+          SNOWFLAKE_SCHEMA="${{ secrets.SNOWFLAKE_SCHEMA }}"
 
           # Loop through and run SQL scripts
           for file in ./steps/*.sql; do
