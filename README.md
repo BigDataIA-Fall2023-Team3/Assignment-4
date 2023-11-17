@@ -5,7 +5,7 @@ Welcome to the Snowflake Data Engineering and Streamlit Analytics Project reposi
 ## Componenets:
 
 - [Codelabs](https://codelabs-preview.appspot.com/?file_id=1YcEUEzPHETJZ2M912GP5cZDNx_fwh1KMA367BFW6Tng#0)
-- [Streamlit]()
+- [Streamlit](https://assignment-4.streamlit.app/)
 - [Dataset](https://app.snowflake.com/hyugzmi/nfb65118/#/data/shared/SNOWFLAKE_DATA_MARKETPLACE/listing/GZTSZAS2KIE?originTab=databases&database=CRIME_STATISTICS)
 
 ## Project Overview

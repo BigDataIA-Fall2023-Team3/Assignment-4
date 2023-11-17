@@ -66,6 +66,15 @@ chain = create_sql_query_chain(chat_model, wrapped_engine)
 # Streamlit interface
 st.title('Natural Language to SQL Query')
 
+if st.button('Show All Tables Info'):
+    try:
+        tables_info_df = wrapped_engine.get_all_tables_info()
+        st.write("Information Schema of All Tables:")
+        st.dataframe(tables_info_df)
+    except Exception as e:
+        st.write("Error in fetching tables information:", e)
+
+
 user_input = st.text_area("Enter your query in natural language:")
 
 # Check if 'response' is in the session state, if not initialize it
