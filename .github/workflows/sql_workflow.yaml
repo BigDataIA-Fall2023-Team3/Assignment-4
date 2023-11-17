@@ -1,4 +1,4 @@
-name: Run SQL Scripts
+name: Execute SQL Scripts in Snowflake
 
 on:
   push:
@@ -6,39 +6,39 @@ on:
       - main
 
 jobs:
-  run_sql_scripts:
+  execute_sql_scripts:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-
-      - name: Install Dependencies
-        run: |
-          pip install snowflake-connector-python
-
       - name: Install SnowSQL
         run: |
-          curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.3-linux_x86_64.bash
-          bash snowsql-1.2.3-linux_x86_64.bash
-          export PATH=$HOME/snowsql:$PATH
+          curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.3-linux_x86_64.tar.gz
+          tar -xzvf snowsql-1.2.3-linux_x86_64.tar.gz
+          chmod +x snowsql
+          mv snowsql /usr/local/bin
           snowsql --version
 
-      - name: Run SQL Scripts
+      - name: Configure SnowSQL
+        env:
+          SNOWSQL_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+          SNOWSQL_USER: ${{ secrets.SNOWSQL_USER }}
+          SNOWSQL_PASSWORD: ${{ secrets.SNOWSQL_PASSWORD }}
+          SNOWSQL_DATABASE: ${{ secrets.SNOWSQL_DATABASE }}
+          SNOWSQL_SCHEMA: ${{ secrets.SNOWSQL_SCHEMA }}
         run: |
-          # Use GitHub secrets for Snowflake credentials
-          SNOWFLAKE_ACCOUNT="${{ secrets.SNOWFLAKE_ACCOUNT }}"
-          SNOWFLAKE_USER="${{ secrets.SNOWFLAKE_USER }}"
-          SNOWFLAKE_PASSWORD="${{ secrets.SNOWFLAKE_PASSWORD }}"
-          SNOWFLAKE_DATABASE="${{ secrets.SNOWFLAKE_DATABASE }}"
-          SNOWFLAKE_SCHEMA="${{ secrets.SNOWFLAKE_SCHEMA }}"
+          echo "[connections.dev]" > ~/.snowsql/config
+          echo "accountname = $SNOWSQL_ACCOUNT" >> ~/.snowsql/config
+          echo "username = $SNOWSQL_USER" >> ~/.snowsql/config
+          echo "password = $SNOWSQL_PASSWORD" >> ~/.snowsql/config
+          echo "dbname = $SNOWSQL_DATABASE" >> ~/.snowsql/config
+          echo "schemaname = $SNOWSQL_SCHEMA" >> ~/.snowsql/config
 
+      - name: Execute SQL Scripts
+        run: |
           # Loop through and run SQL scripts
           for file in ./steps/*.sql; do
-            snowsql -a "$SNOWFLAKE_ACCOUNT" -u "$SNOWFLAKE_USER" -p "$SNOWFLAKE_PASSWORD" -d "$SNOWFLAKE_DATABASE" -s "$SNOWFLAKE_SCHEMA" -f "$file"
+            snowsql -c dev -f "$file"
           done
