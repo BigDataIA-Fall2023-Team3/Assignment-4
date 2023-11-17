@@ -19,6 +19,10 @@ jobs:
           SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
           source ~/.profile
           snowsql --version
+
+      - name: Change to SQL scripts directory
+        run: cd steps
+
       - name: List SQL script files and Debug SnowSQL
         run: |
           sql_files=$(find . -type f -name "*.sql")
@@ -26,15 +30,4 @@ jobs:
             echo "Executing SQL script: $sql_file"
             export PATH=~/bin:$PATH  # Add ~/bin to the PATH
             snowsql -c dev -o log_level=DEBUG -f "$sql_file"
-
-      - name: Change to SQL scripts directory
-        run: cd steps
-
-      - name: List SQL script files
-        run: |
-          sql_files=$(find . -type f -name "*.sql")
-          for sql_file in $sql_files; do
-            echo "Executing SQL script: $sql_file"
-            export PATH=~/bin:$PATH  # Add ~/bin to the PATH
-            snowsql -c dev -f "$sql_file"
           done
