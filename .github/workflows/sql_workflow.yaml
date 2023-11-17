@@ -23,6 +23,6 @@ jobs:
     - name: Test installation
       run: ~/snowflake/snowsql -v
     - name: Execute SQL against Snowflake
-      run: ls
+      run: ~/snowflake/snowsql -f 3.USE_CASE_01.sql;
 
     
