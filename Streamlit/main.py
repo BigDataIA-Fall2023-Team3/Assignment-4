@@ -1,16 +1,16 @@
 import streamlit as st
+import openai
 import os
 from dotenv import load_dotenv
+from langchain.chains import create_sql_query_chain
+from langchain.chat_models import ChatOpenAI
 from sqlalchemy import create_engine
-from sqlalchemy.engine import URL
-from langchain.llms import OpenAI
-from langchain.utilities import SQLDatabase
-from langchain_experimental.sql import SQLDatabaseChain
+from snowflake.sqlalchemy import URL
+import pandas as pd
 
-# Load environment variables
 load_dotenv()
 
-# Snowflake credentials
+# Load environment variables for Snowflake credentials
 snowflake_user = os.getenv('SNOWFLAKE_USER')
 snowflake_password = os.getenv('SNOWFLAKE_PASSWORD')
 snowflake_account = os.getenv('SNOWFLAKE_ACCOUNT')
@@ -18,72 +18,76 @@ snowflake_warehouse = os.getenv('SNOWFLAKE_WAREHOUSE')
 snowflake_database = os.getenv('SNOWFLAKE_DATABASE')
 snowflake_schema = os.getenv('SNOWFLAKE_SCHEMA')
 snowflake_role = os.getenv('SNOWFLAKE_ROLE')
+openai_api_key = os.getenv('OPENAI_API_KEY')
 
-# Create a connection URL using SQLAlchemy
-# Create a connection URL using SQLAlchemy
-connection_url = URL.create(
-    "snowflake",
-    username=snowflake_user,
+# Custom wrapper class for the SQLAlchemy engine
+class CustomEngineWrapper:
+    def __init__(self, engine):
+        self.engine = engine
+
+    def get_table_info(self, table_names=None):
+        # Logic to retrieve table information
+        with self.engine.connect() as connection:
+            if table_names:
+                # If specific table names are provided, retrieve information for those tables
+                query = """
+                    SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE 
+                    FROM INFORMATION_SCHEMA.COLUMNS 
+                    WHERE TABLE_SCHEMA = '{}' AND TABLE_NAME IN ({})""".format(
+                        snowflake_schema, ','.join(f"'{name}'" for name in table_names))
+            else:
+                # If no specific table names are provided, retrieve information for all tables in the schema
+                query = """
+                    SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE 
+                    FROM INFORMATION_SCHEMA.COLUMNS 
+                    WHERE TABLE_SCHEMA = '{}'""".format(snowflake_schema)
+            result = connection.execute(query)
+            return result.fetchall()
+
+    def __getattr__(self, name):
+        return getattr(self.engine, name)
+
+# Create a SQLAlchemy engine for Snowflake
+engine = create_engine(URL(
+    user=snowflake_user,
     password=snowflake_password,
-    host=snowflake_account,
+    account=snowflake_account,
+    warehouse=snowflake_warehouse,
     database=snowflake_database,
-    query={
-        'warehouse': snowflake_warehouse,
-        'role': snowflake_role,
-        'schema': snowflake_schema  # Moved schema here
-    }
-)
+    schema=snowflake_schema,
+    role=snowflake_role
+))
 
+# Wrap the engine with the custom wrapper
+wrapped_engine = CustomEngineWrapper(engine)
 
-# Create an engine
-engine = create_engine(connection_url)
-
-# Initialize the LangChain with OpenAI client
-llm = OpenAI(api_key=os.getenv('OPENAI_API_KEY'), temperature=0, verbose=True)
-db = SQLDatabase(engine)  # Update this line to use the engine directly
-db_chain = SQLDatabaseChain.from_llm(llm, db, verbose=True)
-
-def get_snowflake_conn():
-    # Connect to Snowflake using the engine
-    return engine.connect()
-
-def fetch_schema():
-    with get_snowflake_conn() as conn:
-        query = "SELECT TABLE_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = %(schema)s"
-        result = conn.execute(query, {'schema': snowflake_schema})
-        schema_details = result.fetchall()
-
-    schema_info = {}
-    for table, column in schema_details:
-        if table not in schema_info:
-            schema_info[table] = []
-        schema_info[table].append(column)
-    return schema_info
-
-def generate_sql_query(prompt):
-    response = db_chain.run(prompt)
-    return response
-
-
-
-def run_query(query):
-    with get_snowflake_conn() as conn:
-        result = conn.execute(query)
-        rows = result.fetchall()
-    return rows
+# Initialize the Langchain chain for SQL query generation
+chat_model = ChatOpenAI(api_key=openai_api_key, temperature=0)
+chain = create_sql_query_chain(chat_model, wrapped_engine)
 
 # Streamlit interface
-st.title('Natural Language to SQL Query using LangChain')
+st.title('Natural Language to SQL Query')
 
-schema_info = fetch_schema()
 user_input = st.text_area("Enter your query in natural language:")
 
-if st.button('Generate SQL'):
-    sql_query = generate_sql_query(user_input)
-    st.text("Generated SQL Query:")
-    st.write(sql_query)
+# Check if 'response' is in the session state, if not initialize it
+if 'response' not in st.session_state:
+    st.session_state.response = ''
 
-    if st.button('Run SQL Query'):
-        query_results = run_query(sql_query)
-        st.text("Query Results:")
-        st.write(query_results)
+if st.button('Generate SQL'):
+    st.session_state.response = chain.invoke({"question": user_input})
+    # This will re-run the script and preserve the response in the session state
+
+# Use the session state for the text input's default value
+edited_response = st.text_input("Edit SQL Response", value=st.session_state.response)
+
+if st.button('Run SQL Query'):
+    try:
+        with engine.connect() as connection:
+            # Execute the edited response
+            results = connection.execute(edited_response).fetchall()
+            df = pd.DataFrame(results)
+            st.table(df)     
+    except Exception as e:
+        st.write("Error in executing query:", e)
+
