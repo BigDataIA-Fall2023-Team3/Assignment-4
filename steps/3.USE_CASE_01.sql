@@ -21,19 +21,32 @@ $$;
 -- Create or replace a view to calculate the annual robbery count for cities in 2022
 CREATE OR REPLACE VIEW view_annual_robbery_summary AS
 SELECT
+    ts.geo_id,
     ic.city,
-    convert_date_to_year(ts.date) AS year,
-    SUM(ts.value) AS annual_robbery
+    YEAR(ts.date)::STRING AS year,
+    SUM(ts.value) AS annual_robbery,
+    DENSE_RANK() OVER (ORDER BY SUM(ts.value) DESC) AS robbery_city_rank
 FROM
-    BIGDATA.urban_crime_timeseries AS ts
+    A4_DB.BIGDATA.urban_crime_timeseries AS ts
 JOIN
-    BIGDATA.urban_crime_incident_log AS ic ON ts.geo_id = ic.geo_id
+    A4_DB.BIGDATA.urban_crime_incident_log AS ic ON ts.geo_id = ic.geo_id
 WHERE
-    ts.variable_name = 'Daily count of incidents, robbery'
+    YEAR(ts.date) = '2022'
+    AND ts.variable_name = 'Daily count of incidents, robbery'
 GROUP BY
-    ic.city, year
+    ts.geo_id, ic.city, year
 ORDER BY
     annual_robbery DESC;
+
+
+
+
+
+
+
+
+
+
 
 
 
