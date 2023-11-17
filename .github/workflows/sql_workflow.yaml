@@ -38,7 +38,7 @@ jobs:
       - name: Execute SQL Scripts
         run: |
           # Add a command to change to the directory where your SQL scripts are located
-          cd path/to/sql/scripts
+          cd steps
 
           # List all SQL script files in the directory
           sql_files=$(find . -type f -name "*.sql")
