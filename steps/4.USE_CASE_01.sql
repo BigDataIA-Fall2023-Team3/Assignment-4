@@ -22,7 +22,7 @@ $$;
 CREATE OR REPLACE VIEW view_annual_robbery_summary AS
 SELECT
     ic.city,
-    convert_date_to_year(ts.date),
+    convert_date_to_year(ts.date) AS year,
     SUM(ts.value) AS annual_robbery,
     DENSE_RANK() OVER (ORDER BY SUM(ts.value) DESC) AS robbery_city_rank
 FROM
@@ -32,7 +32,7 @@ JOIN
 WHERE
     ts.variable_name = 'Daily count of incidents, robbery'
 GROUP BY
-    ts.geo_id, ic.city, year
+    ic.city, year
 ORDER BY
     annual_robbery DESC;
 
