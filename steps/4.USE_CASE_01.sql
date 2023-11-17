@@ -30,7 +30,7 @@ FROM
 JOIN
     A4_DB.BIGDATA.urban_crime_incident_log AS ic ON ts.geo_id = ic.geo_id
 WHERE
-    AND ts.variable_name = 'Daily count of incidents, robbery'
+    ts.variable_name = 'Daily count of incidents, robbery'
 GROUP BY
     ts.geo_id, ic.city, year
 ORDER BY
