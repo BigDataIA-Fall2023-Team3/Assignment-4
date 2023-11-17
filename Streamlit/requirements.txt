@@ -1,0 +1,6 @@
+openai
+streamlit
+langchain
+SQLAlchemy
+snowflake-sqlalchemy
+pandas
