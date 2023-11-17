@@ -4,32 +4,36 @@ USE WAREHOUSE A4_WH;
 
 USE DATABASE A4_DB;
 
-CREATE OR REPLACE FUNCTION get_annual_robbery(city_name VARCHAR, year_to_filter INT)
-RETURNS TABLE (
-    geo_id INT,
-    city VARCHAR,
-    year STRING,
-    annual_robbery INT
-) AS $$
-BEGIN
-    RETURN QUERY
-    SELECT
-        ts.geo_id,
-        ic.city,
-        YEAR(ts.date)::STRING AS year,
-        SUM(ts.value) AS annual_robbery
-    FROM
-        BIGDATA.urban_crime_timeseries AS ts
-    JOIN
-        BIGDATA.urban_crime_incident_log AS ic ON ts.geo_id = ic.geo_id
-    WHERE
-        YEAR(ts.date) = year_to_filter
-        AND ts.variable_name = 'Daily count of incidents, robbery'
-        AND ic.city = city_name
-    GROUP BY
-        ts.geo_id, ic.city, year
-    ORDER BY
-        annual_robbery DESC;
-END;
-$$ LANGUAGE plpgsql;
+
+USE SCHEMA A4_DB.BIGDATA;
+-- Create a UDF to convert a date to a year
+CREATE OR REPLACE FUNCTION convert_date_to_year(input_date DATE)
+RETURNS STRING
+AS
+$$
+    CASE
+        WHEN EXTRACT(YEAR FROM input_date) IS NOT NULL THEN CAST(EXTRACT(YEAR FROM input_date) AS STRING)
+        ELSE NULL
+    END
+$$;
+
+
+-- Create or replace a view to calculate the annual robbery count for cities in 2022
+CREATE OR REPLACE VIEW view_annual_robbery_summary AS
+SELECT
+    ic.city,
+    convert_date_to_year(ts.date) AS year,
+    SUM(ts.value) AS annual_robbery
+FROM
+    BIGDATA.urban_crime_timeseries AS ts
+JOIN
+    BIGDATA.urban_crime_incident_log AS ic ON ts.geo_id = ic.geo_id
+WHERE
+    ts.variable_name = 'Daily count of incidents, robbery'
+GROUP BY
+    ic.city, year
+ORDER BY
+    annual_robbery DESC;
+
+
 
