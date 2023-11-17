@@ -22,5 +22,7 @@ def execute_sql_scripts():
             print(f"Error executing {sql_file}: {e}")
             # You can choose to handle errors or continue with the next script
 
+
+# This will Deploy the SQL scripts in the steps folder
 if __name__ == "__main__":
     execute_sql_scripts()
