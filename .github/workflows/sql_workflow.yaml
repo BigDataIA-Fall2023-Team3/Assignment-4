@@ -11,6 +11,8 @@ jobs:
     name: Install SnowSQL                          
     runs-on: ubuntu-latest                           
     steps:
+    - name: Change to SQL scripts directory
+      run: cd steps
     - name: Checkout
       uses: actions/checkout@master
     - name: Download SnowSQL
@@ -20,4 +22,4 @@ jobs:
     - name: Test installation
       run:  ~/snowflake/snowsql -v
     - name: Execute SQL against Snowflake
-      run:  ~/snowflake/snowsql -f .steps/3.USE_CASE_01.sql;
+      run:  ~/snowflake/snowsql -f 3.USE_CASE_01.sql;
