@@ -15,7 +15,7 @@ USE SCHEMA A4_DB.BIGDATA;
 CREATE OR REPLACE VIEW robbery_count_view AS
 SELECT
     ic.CITY AS city,
-    convert_date_to_year(ts.DATE) AS year,
+    CONVERT_DATE_TO_YEAR(ts.DATE) AS year,
     ts.VALUE AS robbery_count
 FROM
     urban_crime_timeseries ts

@@ -1,54 +1,45 @@
+name: Snowflake SQL Scripts
 
-name: SnowSQL
-env:
-  SNOWSQL_DEST: ~/snowflake
-  SNOWSQL_ACCOUNT: HYUGZMI-NFB65118
-  SNOWSQL_USER: SANJU1209
-  SNOWSQL_PWD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-  
-on: push                                                  
-jobs:                         
-  executequery:                           
-    name: Install SnowSQL                          
+on:
+  push:
+    branches:
+      - main  # You can change this to the branch you want to trigger the workflow on
+
+jobs:
+  snowflake_sql_scripts:
+    name: Run Snowflake SQL Scripts
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: steps 
-      
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Download and Install SnowSQL
-      run: |
-        curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
-        SNOWSQL_DEST=~/snowflake SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set Up SnowSQL Config
-      run: |
-        echo "[connections]\n" >> ~/.snowsql/config
-        echo "accountname = ${{ secrets.SNOWSQL_ACCOUNT }}\n" >> ~/.snowsql/config
-        echo "username = ${{ secrets.SNOWSQL_USER }}\n" >> ~/.snowsql/config
-        echo "password = ${{ secrets.SNOWSQL_PWD }}\n" >> ~/.snowsql/config
-        echo "[options]\n" >> ~/.snowsql/config
-        echo "disable_request_pooling = true\n" >> ~/.snowsql/config
+      - name: Set up SnowSQL
+        run: |
+          curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
+          chmod +x snowsql-1.2.9-linux_x86_64.bash
+          SNOWSQL_DEST=~/snowflake SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
 
-    - name: Test SnowSQL Installation
-      run: ~/snowflake/snowsql -v
+      - name: Set up SnowSQL Config
+        run: |
+          echo "[connections]" >> $HOME/.snowsql/config
+          echo "accountname = HYUGZMI-NFB65118" >> $HOME/.snowsql/config
+          echo "username = SANJU1209" >> $HOME/.snowsql/config
+          echo "password = ${{ secrets.SNOWFLAKE_PASSWORD }}" >> $HOME/.snowsql/config
+          # You can also add other configuration options if needed
 
-    - name: Install Python Packages
-      run: pip install snowflake-connector-python
+      - name: List SQL scripts
+        run: cd steps  # Adjust the path to your SQL script folder
 
-    - name: Execute UDFs
-      run: python 3.User_Defined_Functions.py;
-    - name: Execute Use Case 1
-      run: ~/snowflake/snowsql -f 4.USE_CASE_01/4.USE_CASE_01.sql
-    - name: Execute Use Case 2
-      run: ~/snowflake/snowsql -f 5.USE_CASE_02/5.USE_CASE_02.sql
-    - name: Execute Use Case 3
-      run: ~/snowflake/snowsql -f 6.USE_CASE_03/6.USE_CASE_03.sql
-    - name: Execute Use Case 4
-      run: ~/snowflake/snowsql -f 7.USE_CASE_04/7.USE_CASE_04.sql
-    
+      - name: Run SQL scripts
+        run: |
+          
+          ~/snowflake/snowsql -f 1.database.sql
+          ~/snowflake/snowsql -f 2.importing_data.sql
+          ~/snowflake/snowsql -f 3.User_Defined_Functions.sql
+          ~/snowflake/snowsql -f 4.USE_CASE_01/4.USE_CASE_01.sql
+          ~/snowflake/snowsql -f 5.USE_CASE_02/5.USE_CASE_02.sql
+          ~/snowflake/snowsql -f 6.USE_CASE_03/6.USE_CASE_03.sql
+          ~/snowflake/snowsql -f 7.USE_CASE_04/7.USE_CASE_04.sql
 
     

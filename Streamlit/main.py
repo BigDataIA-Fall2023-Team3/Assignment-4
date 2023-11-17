@@ -44,6 +44,18 @@ class CustomEngineWrapper:
 
     def __getattr__(self, name):
         return getattr(self.engine, name)
+    
+
+    def get_all_tables_info(self):
+        # Logic to retrieve information about all tables
+        with self.engine.connect() as connection:
+            query = """
+                SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_SCHEMA = '{}'
+                ORDER BY TABLE_NAME, COLUMN_NAME""".format(snowflake_schema)
+            result = connection.execute(query)
+            return pd.DataFrame(result.fetchall(), columns=['Table Name', 'Column Name', 'Data Type'])
 
 # Create a SQLAlchemy engine for Snowflake
 engine = create_engine(URL(
@@ -66,35 +78,75 @@ chain = create_sql_query_chain(chat_model, wrapped_engine)
 # Streamlit interface
 st.title('Natural Language to SQL Query')
 
-if st.button('Show All Tables Info'):
+# Check if 'session_data' is in the session state, if not initialize it
+if 'session_data' not in st.session_state:
+    st.session_state.session_data = {
+        'table_names': [],
+        'selected_table': None,
+        'response': '',
+        'table_definition': None  # Added a new key for table definition
+    }
+
+# Create a button to fetch and display table names
+if st.button('Fetch Table Names'):
     try:
-        tables_info_df = wrapped_engine.get_all_tables_info()
-        st.write("Information Schema of All Tables:")
-        st.dataframe(tables_info_df)
+        # Retrieve table names from the schema
+        with wrapped_engine.connect() as connection:
+            query = f"SHOW TABLES IN SCHEMA {snowflake_schema}"
+            result = connection.execute(query)
+            table_names = [row[1] for row in result.fetchall()]
+
+        # Store the table names in the session
+        st.session_state.session_data['table_names'] = table_names
+
     except Exception as e:
-        st.write("Error in fetching tables information:", e)
+        st.write("Error in fetching table names:", e)
+
+# Use the session state to select a table
+selected_table = st.selectbox("Select a table:", st.session_state.session_data['table_names'])
 
 
+# Add a button to fetch and display the table definition when a table is selected
+if selected_table:
+    st.write(f"Table Definition for '{selected_table}':")
+    try:
+        with wrapped_engine.connect() as connection:
+            # Retrieve table information for the selected table
+            table_info = wrapped_engine.get_table_info([selected_table])
+
+            # Generate the SQL CREATE TABLE statement
+            create_table_sql = f"CREATE OR REPLACE TABLE {snowflake_schema}.{selected_table} (\n"
+            for row in table_info:
+                column_name, data_type = row[1], row[2]
+                create_table_sql += f"\t{column_name} {data_type},\n"
+            create_table_sql = create_table_sql.rstrip(',\n') + "\n);"
+
+            st.code(create_table_sql, language='sql')  # Display the SQL code
+        st.session_state.session_data['table_definition'] = create_table_sql  # Store the table definition in session
+    except Exception as e:
+        st.write("Error in fetching table definition:", e)
+
+
+# Allow user to enter a query for the selected table
 user_input = st.text_area("Enter your query in natural language:")
 
-# Check if 'response' is in the session state, if not initialize it
-if 'response' not in st.session_state:
-    st.session_state.response = ''
+# Add a button to fetch and display the table definition when a table is selected
+
+
 
 if st.button('Generate SQL'):
-    st.session_state.response = chain.invoke({"question": user_input})
-    # This will re-run the script and preserve the response in the session state
+    # Generate SQL query based on user input and selected table
+    st.session_state.session_data['response'] = chain.invoke({"question": user_input, "selected_table": selected_table})
 
 # Use the session state for the text input's default value
-edited_response = st.text_input("Edit SQL Response", value=st.session_state.response)
+edited_response = st.text_input("Edit SQL Response", value=st.session_state.session_data['response'])
 
 if st.button('Run SQL Query'):
     try:
-        with engine.connect() as connection:
+        with wrapped_engine.connect() as connection:
             # Execute the edited response
             results = connection.execute(edited_response).fetchall()
             df = pd.DataFrame(results)
-            st.table(df)     
+            st.table(df)
     except Exception as e:
         st.write("Error in executing query:", e)
-

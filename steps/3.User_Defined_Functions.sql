@@ -1,23 +1,10 @@
-import snowflake.connector
-import os
-import subprocess
+USE ROLE ANALYST_ROLE;
+USE WAREHOUSE A4_WH;
+USE DATABASE A4_DB;
+USE SCHEMA A4_DB.BIGDATA;
 
-# Snowflake connection parameters
-snowflake_config = {
-    'user': 'SANJU1209',
-    'password': 'Sanju1209',
-    'account': 'HYUGZMI-NFB65118',
-    'warehouse': 'A4_WH',
-    'database': 'A4_DB',
-    'schema': 'BIGDATA'
-}
-
-
-conn = snowflake.connector.connect(**snowflake_config)
-
-# Define UDFs
-udf_convert_date_to_year = """
-CREATE OR REPLACE FUNCTION CONVERT_DATE_TO_YEAR(input_date DATE)
+-- Create a UDF to convert a date to a year
+CREATE OR REPLACE FUNCTION convert_date_to_year(input_date DATE)
 RETURNS STRING
 AS
 $$
@@ -26,9 +13,8 @@ $$
         ELSE NULL
     END
 $$;
-"""
 
-udf_classify_crime_severity = """
+
 CREATE OR REPLACE FUNCTION classify_crime_severity(offense_category STRING)
 RETURNS STRING
 AS
@@ -38,10 +24,9 @@ $$
         WHEN offense_category IN ('Robbery', 'Battery Or Assault', 'Narcotics', 'Burglary', 'Interference With Public Officer', 'Kidnapping') THEN 'Medium'
         ELSE 'Low'
     END
-$$;
-"""
 
-udf_extract_weekday = """
+$$;
+
 CREATE OR REPLACE FUNCTION extract_weekday(date_input DATE)
 RETURNS STRING
 AS
@@ -56,9 +41,7 @@ $$
         WHEN 7 THEN 'Saturday'
     END
 $$;
-"""
 
-udf_classify_relationship_type = """
 CREATE OR REPLACE FUNCTION classify_relationship_type(relationship_type STRING)
 RETURNS STRING 
 AS
@@ -68,14 +51,3 @@ $$
         ELSE 'CONTAINS'
     END
 $$;
-"""
-
-# Execute UDF creation SQL statements
-cursor = conn.cursor()
-cursor.execute(udf_convert_date_to_year)
-cursor.execute(udf_classify_crime_severity)
-cursor.execute(udf_extract_weekday)
-cursor.execute(udf_classify_relationship_type)
-
-# Close the Snowflake connection
-conn.close()
