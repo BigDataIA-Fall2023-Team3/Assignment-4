@@ -28,5 +28,6 @@ jobs:
           sql_files=$(find . -type f -name "*.sql")
           for sql_file in $sql_files; do
             echo "Executing SQL script: $sql_file"
+            export PATH=~/bin:$PATH  # Add ~/bin to the PATH
             snowsql -c dev -f "$sql_file"
           done
