@@ -1,7 +1,6 @@
 import streamlit as st
 import openai
 import os
-from dotenv import load_dotenv
 from langchain.chains import create_sql_query_chain
 from langchain.chat_models import ChatOpenAI
 from sqlalchemy import create_engine
@@ -11,14 +10,14 @@ import pandas as pd
 load_dotenv()
 
 # Load environment variables for Snowflake credentials
-snowflake_user = os.getenv('SNOWFLAKE_USER')
-snowflake_password = os.getenv('SNOWFLAKE_PASSWORD')
-snowflake_account = os.getenv('SNOWFLAKE_ACCOUNT')
-snowflake_warehouse = os.getenv('SNOWFLAKE_WAREHOUSE')
-snowflake_database = os.getenv('SNOWFLAKE_DATABASE')
-snowflake_schema = os.getenv('SNOWFLAKE_SCHEMA')
-snowflake_role = os.getenv('SNOWFLAKE_ROLE')
-openai_api_key = os.getenv('OPENAI_API_KEY')
+snowflake_user = st.secrets['SNOWFLAKE_USER']
+snowflake_password = st.secrets['SNOWFLAKE_PASSWORD']
+snowflake_account = st.secrets['SNOWFLAKE_ACCOUNT']
+snowflake_warehouse = st.secrets['SNOWFLAKE_WAREHOUSE']
+snowflake_database = st.secrets['SNOWFLAKE_DATABASE']
+snowflake_schema = st.secrets['SNOWFLAKE_SCHEMA']
+snowflake_role = st.secrets['SNOWFLAKE_ROLE']
+openai_api_key = st.secrets['OPENAI_API_KEY']
 
 # Custom wrapper class for the SQLAlchemy engine
 class CustomEngineWrapper:
