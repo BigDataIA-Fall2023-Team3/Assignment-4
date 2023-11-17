@@ -1,28 +1,23 @@
-import os
-import subprocess
-
-def execute_sql_scripts():
-    # Define the directory containing your SQL scripts
-    sql_script_dir = './steps/'
-
-    # List all SQL script files in the directory
-    sql_files = [f for f in os.listdir(sql_script_dir) if f.endswith('.sql')]
-
-    # SnowSQL connection string
-    snowsql_connection = 'dev'
-
-    for sql_file in sql_files:
-        # Construct the SnowSQL command
-        snowsql_cmd = f"snowsql -c {snowsql_connection} -f {os.path.join(sql_script_dir, sql_file)}"
-        
-        # Execute the SQL script using subprocess
-        try:
-            subprocess.run(snowsql_cmd, shell=True, check=True)
-        except subprocess.CalledProcessError as e:
-            print(f"Error executing {sql_file}: {e}")
-            # You can choose to handle errors or continue with the next script
-
-
-# This will Deploy the SQL scripts in the steps folder
-if __name__ == "__main__":
-    execute_sql_scripts()
+name: SnowSQL
+env:
+  SNOWSQL_DEST: ~/snowflake
+  SNOWSQL_ACCOUNT: HYUGZMI-NFB65118
+  SNOWSQL_USER: SANJU1209
+  SNOWSQL_PWD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+  
+on: push                                                  
+jobs:                         
+  executequery:                           
+    name: Install SnowSQL                          
+    runs-on: ubuntu-latest                           
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: Download SnowSQL
+      run:  curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
+    - name: Install SnowSQL
+      run: SNOWSQL_DEST=~/snowflake SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
+    - name: Test installation
+      run:  ~/snowflake/snowsql -v
+    - name: Execute SQL against Snowflake
+      run:  ~/snowflake/snowsql -f .steps/3.USE_CASE_01.sql;
