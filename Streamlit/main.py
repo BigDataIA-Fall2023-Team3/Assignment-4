@@ -7,7 +7,6 @@ from sqlalchemy import create_engine
 from snowflake.sqlalchemy import URL
 import pandas as pd
 
-load_dotenv()
 
 # Load environment variables for Snowflake credentials
 snowflake_user = st.secrets['SNOWFLAKE_USER']
