@@ -1,51 +1,23 @@
-name: Execute SQL Scripts in Snowflake
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  execute_sql_scripts:
-    runs-on: ubuntu-latest
-
+name: SnowSQL
+env:
+  SNOWSQL_DEST: ~/snowflake
+  SNOWSQL_ACCOUNT: HYUGZMI-NFB65118
+  SNOWSQL_USER: SANJU1209
+  SNOWSQL_PWD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+  
+on: push                                                  
+jobs:                         
+  executequery:                           
+    name: Install SnowSQL                          
+    runs-on: ubuntu-latest                           
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
-
-      - name: Install SnowSQL
-        run: |
-          curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
-          SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
-          source ~/.profile
-          snowsql --version
-
-      - name: Configure SnowSQL
-        env:
-          SNOWSQL_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWSQL_USER: ${{ secrets.SNOWFLAKE_USER }}
-          SNOWSQL_PWD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-          SNOWSQL_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
-          SNOWSQL_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
-          SNOWSQL_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
-        run: |
-          cd $GITHUB_WORKSPACE
-          echo "[connections.dev]" > config
-          echo "accountname = $SNOWSQL_ACCOUNT" >> config
-          echo "username = $SNOWSQL_USER" >> config
-          echo "password = $SNOWSQL_PWD" >> config
-          echo "rolename = $SNOWSQL_ROLE" >> config
-          echo "warehousename = $SNOWSQL_WAREHOUSE" >> config
-          echo "dbname = $SNOWSQL_DATABASE" >> config
-
-      - name: Change to SQL scripts directory
-        run: cd steps
-
-      - name: List SQL script files
-        run: |
-          sql_files=$(find . -type f -name "*.sql")
-          for sql_file in $sql_files; do
-            echo "Executing SQL script: $sql_file"
-            export PATH=~/bin:$PATH  # Add ~/bin to the PATH
-            snowsql -c dev -o log_level=DEBUG -f "$sql_file"
-          done
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: Download SnowSQL
+      run:  curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
+    - name: Install SnowSQL
+      run: SNOWSQL_DEST=~/snowflake SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
+    - name: Test installation
+      run:  ~/snowflake/snowsql -v
+    - name: Execute SQL against Snowflake
+      run:  ~/snowflake/snowsql -f .steps/3.USE_CASE_01.sql;
