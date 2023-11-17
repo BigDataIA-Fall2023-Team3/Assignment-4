@@ -1,52 +1,32 @@
-name: CI
+name: Execute SQL Scripts in Snowflake
 
 on:
   push:
     branches:
-      - "*"
-    tags:
-      - "v*"
-  workflow_dispatch:
+      - main
 
 jobs:
-  deploy:
+  execute_sql_scripts:
     runs-on: ubuntu-latest
 
-    env:
-      SNOWSQL_PWD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-      SNOWSQL_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-      SNOWSQL_USER: ${{ secrets.SNOWFLAKE_USERNAME }}
-      SNOWSQL_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
-      SNOWSQL_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
-      SNOWSQL_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
-
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v2
 
       - name: Install SnowSQL
         run: |
           curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
           SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
+          source ~/.profile
+          snowsql --version
 
-      - name: Execute SQL Scripts
+      - name: Change to SQL scripts directory
+        run: cd steps
+
+      - name: List SQL script files
         run: |
-          # Add a command to change to the directory where your SQL scripts are located
-          cd steps
-
-          # List all SQL script files in the directory
           sql_files=$(find . -type f -name "*.sql")
-
-          # SnowSQL connection string
-          snowsql_connection="dev"
-
           for sql_file in $sql_files; do
-            # Construct the SnowSQL command
-            snowsql_cmd="~/bin/snowsql -c ${snowsql_connection} -f ${sql_file}"
-            
-            # Execute the SQL script using subprocess
-            $snowsql_cmd
-            if [ $? -ne 0 ]; then
-              echo "Error executing $sql_file"
-              exit 1
-            fi
+            echo "Executing SQL script: $sql_file"
+            snowsql -c dev -f "$sql_file"
           done
