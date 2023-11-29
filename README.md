@@ -1,6 +1,6 @@
 # Assignment-4 : Snowflake Data Engineering and Streamlit Analytics Project
 
-Welcome to the Snowflake Data Engineering and Streamlit Analytics Project repository! This project aims to demonstrate the integration of Snowflake, a cloud-based data warehousing platform, with Streamlit, a Python framework for building data applications. The goal is to process and analyze datasets stored in Snowflake using Streamlit's natural language to SQL query capabilities
+Welcome to the Snowflake Data Engineering and Streamlit Analytics Project repository! This project aims to demonstrate the integration of Snowflake, a cloud-based data warehousing platform, with Streamlit, a Python framework for building data applications. The goal is to process and analyze datasets stored in Snowflake using Streamlit's natural language to SQL query capabilities.
 
 ## Componenets:
 
