@@ -8,6 +8,13 @@ Welcome to the Snowflake Data Engineering and Streamlit Analytics Project reposi
 - [Streamlit](https://assignment-4.streamlit.app/)
 - [Dataset](https://app.snowflake.com/hyugzmi/nfb65118/#/data/shared/SNOWFLAKE_DATA_MARKETPLACE/listing/GZTSZAS2KIE?originTab=databases&database=CRIME_STATISTICS)
 
+## Part A:
+[Sumanayana Konda](https://github.com/Sumanayana-Konda/Assignment-4-PartA)
+[Akshatha Patil](https://github.com/Akshathapatil1998/sfguide-data-engineering-with-snowpark-python)
+[Ruthwik BG](https://github.com/RuthwikBg/Assignment-4-PartA)
+[Pavan Madhav N](https://github.com/MadhavNainala/sfguide-data-engineering-with-snowpark-python)
+
+
 ## Project Overview
 
 In this project, we have implemented the following key components:
